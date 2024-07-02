@@ -23,15 +23,16 @@ class SacdAgent(BaseAgent):
             target_update_interval, use_per, num_eval_steps, max_episode_steps,
             log_interval, eval_interval, cuda, seed)
 
+        input_channel = self.env.observation_space.shape[-1]
         # Define networks.
         self.policy = CateoricalPolicy(
-            self.env.observation_space.shape[0], self.env.action_space.n
+            input_channel, self.env.action_space.n
             ).to(self.device)
         self.online_critic = TwinnedQNetwork(
-            self.env.observation_space.shape[0], self.env.action_space.n,
+            input_channel, self.env.action_space.n,
             dueling_net=dueling_net).to(device=self.device)
         self.target_critic = TwinnedQNetwork(
-            self.env.observation_space.shape[0], self.env.action_space.n,
+            input_channel, self.env.action_space.n,
             dueling_net=dueling_net).to(device=self.device).eval()
 
         # Copy parameters of the learning network to the target network.

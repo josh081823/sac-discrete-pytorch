@@ -48,7 +48,7 @@ class LazyMemory(dict):
     def __init__(self, capacity, state_shape, device):
         super(LazyMemory, self).__init__()
         self.capacity = int(capacity)
-        self.state_shape = state_shape
+        self.state_shape = (state_shape[-1], *state_shape[:-1])
         self.device = device
         self.reset()
 

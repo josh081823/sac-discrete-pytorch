@@ -7,6 +7,8 @@ from torch.utils.tensorboard import SummaryWriter
 from sacd.memory import LazyMultiStepMemory, LazyPrioritizedMultiStepMemory
 from sacd.utils import update_params, RunningMeanStats
 
+from smb_env_fct import move_state_channels
+
 
 class BaseAgent(ABC):
 
@@ -23,8 +25,8 @@ class BaseAgent(ABC):
         # Set seed.
         torch.manual_seed(seed)
         np.random.seed(seed)
-        self.env.seed(seed)
-        self.test_env.seed(2**31-1-seed)
+        # self.env.seed(seed)
+        # self.test_env.seed(2**31-1-seed)
         # torch.backends.cudnn.deterministic = True  # It harms a performance.
         # torch.backends.cudnn.benchmark = False  # It harms a performance.
 
@@ -120,16 +122,18 @@ class BaseAgent(ABC):
         episode_steps = 0
 
         done = False
-        state = self.env.reset()
+        state, _ = self.env.reset()
+        state = move_state_channels(state)
 
         while (not done) and episode_steps <= self.max_episode_steps:
 
             if self.start_steps > self.steps:
                 action = self.env.action_space.sample()
             else:
-                action = self.explore(state)
+                action = self.explore(state.copy())
 
             next_state, reward, done, _ = self.env.step(action)
+            next_state = move_state_channels(next_state)
 
             # Clip reward to [-1.0, 1.0].
             clipped_reward = max(min(reward, 1.0), -1.0)
@@ -221,13 +225,16 @@ class BaseAgent(ABC):
         total_return = 0.0
 
         while True:
-            state = self.test_env.reset()
+            state, _ = self.test_env.reset()
+            state = move_state_channels(state)
+
             episode_steps = 0
             episode_return = 0.0
             done = False
             while (not done) and episode_steps <= self.max_episode_steps:
-                action = self.exploit(state)
+                action = self.exploit(state.copy())
                 next_state, reward, done, _ = self.test_env.step(action)
+                next_state = move_state_channels(next_state)
                 num_steps += 1
                 episode_steps += 1
                 episode_return += reward
