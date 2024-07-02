@@ -1,5 +1,5 @@
 pyyaml
 numpy
 torch
-gym[atari]==0.17.2
+gym[atari]
 tensorboard
