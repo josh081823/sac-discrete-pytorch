@@ -1,5 +1,6 @@
 import imp
 import os
+from tkinter import NO
 import yaml
 import argparse
 from datetime import datetime
@@ -19,8 +20,9 @@ from datetime import datetime
 import cv2
 from tqdm import tqdm
 import numpy as np
+from datetime import datetime
 from gym.wrappers import GrayScaleObservation
-from smb_env_fct import renderEnv, plotRewardandTime, DeadlockEnv, SkipFrame, Downsample, GrayScale, move_state_channels
+from smb_env_fct import renderEnv, plotRewardandTime, DeadlockEnv, SkipFrame, Downsample, GrayScale, move_state_channels, MarioDeathLoggerWrapper
 
 
 def run(args):
@@ -28,18 +30,20 @@ def run(args):
         config = yaml.load(f, Loader=yaml.SafeLoader)
 
     frameskip = 8                         # the frameskip value of the environment
-
+    current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    logfile = f"./logs/{args.env_id}/mario_death_logfile_{current_time}.txt"
     # Create environments.
     # env = make_pytorch_env(args.env_id, clip_rewards=False)
     # test_env = make_pytorch_env(
     #     args.env_id, episode_life=False, clip_rewards=False)
 
-    env = gym_super_mario_bros.make('SuperMarioBros-v1', apply_api_compatibility=True)  #the environment. v0 is with original background, v1 has the background removed
+    env = gym_super_mario_bros.make(args.env_id, apply_api_compatibility=True)  #the environment. v0 is with original background, v1 has the background removed
     env = JoypadSpace(env, SIMPLE_MOVEMENT)               #The Joypadspace sets the available actions. We use SIMPLE_MOVEMENT.
     env = SkipFrame(env, skip=frameskip)                  #Skipframewrapper to skip some frames
     env = DeadlockEnv(env,threshold=10)                   #Deadlock environment wrapper to stop the game if mario is stuck at a pipe
+    env = MarioDeathLoggerWrapper(env, logfile=logfile, env_id=None, select_random_stage=True)
 
-    test_env = gym_super_mario_bros.make('SuperMarioBros-v1', apply_api_compatibility=True)  
+    test_env = gym_super_mario_bros.make(args.env_id, apply_api_compatibility=True)  
     test_env = JoypadSpace(test_env, SIMPLE_MOVEMENT)
     test_env = SkipFrame(test_env, skip=frameskip)
     test_env = DeadlockEnv(test_env,threshold=10)
@@ -65,7 +69,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--config', type=str, default=os.path.join('config', 'sacd.yaml'))
     parser.add_argument('--shared', action='store_true')
-    parser.add_argument('--env_id', type=str, default='MsPacmanNoFrameskip-v4')
+    parser.add_argument('--env_id', type=str, default='SuperMarioBros-v2')
     parser.add_argument('--cuda', action='store_true')
     parser.add_argument('--seed', type=int, default=0)
     args = parser.parse_args()

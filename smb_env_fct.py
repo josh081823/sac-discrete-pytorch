@@ -11,6 +11,7 @@ from tqdm import tqdm
 import numpy as np
 from gym.wrappers import GrayScaleObservation
 import gym
+import logging
 
 #renders given frames with mediapy and shows a video
 def renderEnv(frames):
@@ -101,6 +102,40 @@ class SkipFrame(gym.Wrapper):
 
         #return obs, reward_out, done, info, terminated
         return observation, reward_out, terminated, info, truncated
+
+
+class MarioDeathLoggerWrapper(gym.Wrapper):
+    def __init__(self, env, logfile="mario_deaths.log", env_id=None, select_random_stage=None):
+        super().__init__(env)
+        self.env = env
+        self.episode_counter = 0
+        self.log_file = logfile
+        self.env_id = env_id
+        self.select_random_stage = select_random_stage
+
+    def step(self, action):
+        obs, reward, done, info = self.env.step(action)
+        
+        # Check if Mario died
+        if done and 'x_pos' in info and 'y_pos' in info:
+            # Log the death position and episode number
+            self.log_death(info['x_pos'], info['y_pos'], info['stage'], info['world'])
+        
+        return obs, reward, done, info
+
+    def reset(self):
+        # Increment episode counter on reset
+        self.episode_counter += 1
+        return self.env.reset()
+
+    def log_death(self, x_pos, y_pos, stage, world):
+        # Log the death position and episode number to a file
+        with open(self.log_file, 'a') as file:
+            if self.select_random_stage is not None and self.env_id is not None:
+                file.write(f"Episode: {self.episode_counter}, \tEnv-Id: {self.env_id}, \tRandom-Stages: {self.select_random_stage}, \tWorld: {world}, \tStage: {stage} \tDeath Position (x, y): ({x_pos}, {y_pos}) \t⸺ {self.env_id}, {self.episode_counter}, \t⸺ {world}, {stage}, {x_pos}\n")
+            else:
+                file.write(f"Episode: {self.episode_counter}, \tWorld: {world}, \tStage: {stage}, \tDeath Position (x, y): ({x_pos}, {y_pos}) \t⸺ {self.episode_counter}, \t⸺ {world}, {stage}, {x_pos}\n")
+
 
 #downsample wrapper to reduce dimensionality
 def Downsample(ratio,state):

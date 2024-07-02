@@ -163,9 +163,9 @@ class BaseAgent(ABC):
             self.writer.add_scalar(
                 'reward/train', self.train_return.get(), self.steps)
 
-        print(f'Episode: {self.episodes:<4}  '
-              f'Episode steps: {episode_steps:<4}  '
-              f'Return: {episode_return:<5.1f}')
+        # print(f'Episode: {self.episodes:<4}  '
+        #       f'Episode steps: {episode_steps:<4}  '
+        #       f'Return: {episode_return:<5.1f}')
 
     def learn(self):
         assert hasattr(self, 'q1_optim') and hasattr(self, 'q2_optim') and\
