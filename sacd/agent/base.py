@@ -141,7 +141,7 @@ class BaseAgent(ABC):
 
             # # Clip reward to [-1.0, 1.0].
             # clipped_reward = max(min(reward, 1.0), -1.0)
-            
+
             # keep reward
             clipped_reward = reward
 
@@ -287,9 +287,10 @@ class BaseAgent(ABC):
         num_steps = 0
         total_return = 0.0
         episode_list = []
-        frames = []
+        
 
         while True:
+            frames = []
             state, _ = self.test_env.reset()
             frames.append(state.copy())
             state = move_state_channels(state)
@@ -312,7 +313,7 @@ class BaseAgent(ABC):
 
             num_episodes += 1
             total_return += episode_return
-            print("episode: {} episode return: {}".format(num_episodes, episode_return))
+            # print("episode: {} episode return: {}".format(num_episodes, episode_return))
 
             if len(frames) > 0:
                 episode_list.append((episode_return,frames))
@@ -320,8 +321,8 @@ class BaseAgent(ABC):
             if num_steps > self.num_eval_steps:
                 break
         
-        mean_return = total_return / num_episodes
-        print(f'mean return: {mean_return:<5.1f}')
+        # mean_return = total_return / num_episodes
+        # print(f'mean return: {mean_return:<5.1f}')
 
         if len(episode_list) > 0:
             episode_list.sort(key=lambda x: x[0])
