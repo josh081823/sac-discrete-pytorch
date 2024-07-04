@@ -240,7 +240,7 @@ class BaseAgent(ABC):
             episode_return = 0.0
             done = False
             while (not done) and episode_steps <= self.max_episode_steps:
-                action = self.explore(state.copy())
+                action = self.exploit(state.copy())
                 next_state, reward, done, _ = self.test_env.step(action)
                 next_state = move_state_channels(next_state)
                 num_steps += 1
@@ -299,7 +299,7 @@ class BaseAgent(ABC):
             episode_return = 0.0
             done = False
             while (not done) and episode_steps <= self.max_episode_steps:
-                action = self.explore(state.copy())
+                action = self.exploit(state.copy())
                 next_state, reward, done, _ = self.test_env.step(action)
 
                 if not done:

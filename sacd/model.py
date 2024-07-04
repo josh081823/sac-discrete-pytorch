@@ -132,3 +132,26 @@ class CateoricalPolicy(BaseNetwork):
         log_action_probs = torch.log(action_probs + z)
 
         return actions, action_probs, log_action_probs
+
+    def soft_act(self, states, top_n=3):
+        if not self.shared:
+            states = self.conv(states)
+
+        # 计算动作的概率分布
+        action_probs = F.softmax(self.head(states), dim=1)
+
+        # 找到前 top_n 个概率最大的动作
+        top_probs, top_indices = torch.topk(action_probs, top_n, dim=1)
+
+        # 重新归一化选出的 top_n 动作的概率分布
+        top_probs_normalized = top_probs / top_probs.sum(dim=1, keepdim=True)
+
+        # 创建一个新的类别分布，仅从 top_n 动作中采样
+        action_dist = Categorical(top_probs_normalized)
+        actions = top_indices.gather(1, action_dist.sample().view(-1, 1))
+
+        # 计算 top_n 动作的对数概率
+        z = (top_probs_normalized == 0.0).float() * 1e-8
+        # log_action_probs = torch.log(top_probs_normalized + z)
+
+        return actions

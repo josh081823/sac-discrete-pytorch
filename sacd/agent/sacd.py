@@ -63,11 +63,13 @@ class SacdAgent(BaseAgent):
         return action.item()
 
     def exploit(self, state):
+        # 仅在evaluate中使用，改为soft_act
         # Act without randomness.
         state = torch.ByteTensor(
             state[None, ...]).to(self.device).float() / 255.
         with torch.no_grad():
-            action = self.policy.act(state)
+            action = self.policy.soft_act(state)
+            # action = self.policy.act(state)
         return action.item()
 
     def update_target(self):
