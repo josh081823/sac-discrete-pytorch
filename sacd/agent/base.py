@@ -7,7 +7,7 @@ from torch.utils.tensorboard import SummaryWriter
 from sacd.memory import LazyMultiStepMemory, LazyPrioritizedMultiStepMemory
 from sacd.utils import update_params, RunningMeanStats
 
-from smb_env_fct import move_state_channels
+from smb_env_fct import move_state_channels, renderEnv
 
 
 class BaseAgent(ABC):
@@ -254,10 +254,15 @@ class BaseAgent(ABC):
 
         self.writer.add_scalar(
             'reward/test', mean_return, self.steps)
-        print('-' * 60)
-        print(f'Num steps: {self.steps:<5}  '
-              f'return: {mean_return:<5.1f}')
-        print('-' * 60)
+
+        file_path = "{}/returns_log.txt".format(self.log_dir)
+        with open(file_path, 'a') as file:        
+            # print('-' * 60, file=file)
+            print(f'Num steps: {self.steps:<5}  '
+                f'return: {mean_return:<5.1f}', file=file)
+            print(f'Num steps: {self.steps:<5}  '
+                f'return: {mean_return:<5.1f}')
+            # print('-' * 60, file=file)
 
     @abstractmethod
     def save_models(self, save_dir):
@@ -268,3 +273,64 @@ class BaseAgent(ABC):
         self.env.close()
         self.test_env.close()
         self.writer.close()
+
+    def testnshow(self):
+        num_episodes = 0
+        num_steps = 0
+        total_return = 0.0
+        episode_list = []
+        frames = []
+
+        while True:
+            state, _ = self.test_env.reset()
+            frames.append(state.copy())
+            state = move_state_channels(state)
+
+            episode_steps = 0
+            episode_return = 0.0
+            done = False
+            while (not done) and episode_steps <= self.max_episode_steps:
+                action = self.exploit(state.copy())
+                next_state, reward, done, _ = self.test_env.step(action)
+
+                if not done:
+                    frames.append(next_state.copy())
+                
+                next_state = move_state_channels(next_state)
+                num_steps += 1
+                episode_steps += 1
+                episode_return += reward
+                state = next_state
+
+            num_episodes += 1
+            total_return += episode_return
+            print("episode: {} episode return: {}".format(num_episodes, episode_return))
+
+            if len(frames) > 0:
+                episode_list.append((episode_return,frames))
+
+            if num_steps > self.num_eval_steps:
+                break
+        
+        mean_return = total_return / num_episodes
+        print(f'mean return: {mean_return:<5.1f}')
+
+        if len(episode_list) > 0:
+            episode_list.sort(key=lambda x: x[0])
+            renderEnv(episode_list[-1][1])
+        else:
+            print("no available video")
+
+    @abstractmethod
+    def load_models(self, load_dir):
+        pass
+
+
+
+
+
+
+
+
+
+

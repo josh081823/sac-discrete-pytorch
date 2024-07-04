@@ -160,3 +160,6 @@ def move_state_channels(state):
     """
     return np.transpose(state, (2, 0, 1))
 
+def renderEnv(frames):
+    import mediapy as media
+    media.show_video(frames,fps=60//6)

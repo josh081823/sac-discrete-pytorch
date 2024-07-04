@@ -1,5 +1,5 @@
 pyyaml
 numpy
 torch
-gym[atari]
+gym
 tensorboard

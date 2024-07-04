@@ -29,13 +29,17 @@ def run(args):
     with open(args.config) as f:
         config = yaml.load(f, Loader=yaml.SafeLoader)
 
-    frameskip = 8                         # the frameskip value of the environment
-    current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    logfile = f"./logs/{args.env_id}/mario_death_logfile_{current_time}.txt"
-    # Create environments.
-    # env = make_pytorch_env(args.env_id, clip_rewards=False)
-    # test_env = make_pytorch_env(
-    #     args.env_id, episode_life=False, clip_rewards=False)
+    frameskip = 4                         # the frameskip value of the environment
+
+    # Specify the directory to log.
+    name = args.config.split('/')[-1].rstrip('.yaml')
+    if args.shared:
+        name = 'shared-' + name
+    time = datetime.now().strftime("%Y%m%d-%H%M")
+    log_dir = os.path.join(
+        'logs', args.env_id, f'{name}-seed{args.seed}-{time}')
+    
+    logfile = f"{log_dir}/mario_death_logfile_{time}.txt"
 
     env = gym_super_mario_bros.make(args.env_id, apply_api_compatibility=True)  #the environment. v0 is with original background, v1 has the background removed
     env = JoypadSpace(env, SIMPLE_MOVEMENT)               #The Joypadspace sets the available actions. We use SIMPLE_MOVEMENT.
@@ -48,13 +52,6 @@ def run(args):
     test_env = SkipFrame(test_env, skip=frameskip)
     test_env = DeadlockEnv(test_env,threshold=10)
 
-    # Specify the directory to log.
-    name = args.config.split('/')[-1].rstrip('.yaml')
-    if args.shared:
-        name = 'shared-' + name
-    time = datetime.now().strftime("%Y%m%d-%H%M")
-    log_dir = os.path.join(
-        'logs', args.env_id, f'{name}-seed{args.seed}-{time}')
 
     # Create the agent.
     Agent = SacdAgent if not args.shared else SharedSacdAgent

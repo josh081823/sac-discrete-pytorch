@@ -155,3 +155,10 @@ class SharedSacdAgent(BaseAgent):
         self.policy.save(os.path.join(save_dir, 'policy.pth'))
         self.online_critic.save(os.path.join(save_dir, 'online_critic.pth'))
         self.target_critic.save(os.path.join(save_dir, 'target_critic.pth'))
+
+# 未验证
+    def load_models(self, load_dir):
+        self.conv.load(os.path.join(load_dir, 'conv.pth'))
+        self.policy.load(os.path.join(load_dir, 'policy.pth'))
+        self.online_critic.load(os.path.join(load_dir, 'online_critic.pth'))
+        self.target_critic.load(os.path.join(load_dir, 'target_critic.pth'))
