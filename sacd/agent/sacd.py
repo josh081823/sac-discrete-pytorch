@@ -72,6 +72,12 @@ class SacdAgent(BaseAgent):
 
     def update_target(self):
         self.target_critic.load_state_dict(self.online_critic.state_dict())
+        # for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
+        #     target_param.data.copy_(self.tau*local_param.data + (1.0-self.tau)*target_param.data)
+        
+    def soft_update_target(self, tau=0.05):
+        for target_param, online_param in zip(self.target_critic.parameters(), self.online_critic.parameters()):
+            target_param.data.copy_(tau * online_param.data + (1 - tau) * target_param.data)
 
     def calc_current_q(self, states, actions, rewards, next_states, dones):
         curr_q1, curr_q2 = self.online_critic(states)

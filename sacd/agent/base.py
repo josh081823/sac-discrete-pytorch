@@ -97,6 +97,10 @@ class BaseAgent(ABC):
         pass
 
     @abstractmethod
+    def soft_update_target(self, tau=0.05):
+        pass
+
+    @abstractmethod
     def calc_current_q(self, states, actions, rewards, next_states, dones):
         pass
 
@@ -135,8 +139,11 @@ class BaseAgent(ABC):
             next_state, reward, done, _ = self.env.step(action)
             next_state = move_state_channels(next_state)
 
-            # Clip reward to [-1.0, 1.0].
-            clipped_reward = max(min(reward, 1.0), -1.0)
+            # # Clip reward to [-1.0, 1.0].
+            # clipped_reward = max(min(reward, 1.0), -1.0)
+            
+            # keep reward
+            clipped_reward = reward
 
             # To calculate efficiently, set priority=max_priority here.
             self.memory.append(state, action, clipped_reward, next_state, done)
@@ -150,7 +157,8 @@ class BaseAgent(ABC):
                 self.learn()
 
             if self.steps % self.target_update_interval == 0:
-                self.update_target()
+                # self.update_target()
+                self.soft_update_target()
 
             if self.steps % self.eval_interval == 0:
                 self.evaluate()
@@ -232,7 +240,7 @@ class BaseAgent(ABC):
             episode_return = 0.0
             done = False
             while (not done) and episode_steps <= self.max_episode_steps:
-                action = self.exploit(state.copy())
+                action = self.explore(state.copy())
                 next_state, reward, done, _ = self.test_env.step(action)
                 next_state = move_state_channels(next_state)
                 num_steps += 1
@@ -290,7 +298,7 @@ class BaseAgent(ABC):
             episode_return = 0.0
             done = False
             while (not done) and episode_steps <= self.max_episode_steps:
-                action = self.exploit(state.copy())
+                action = self.explore(state.copy())
                 next_state, reward, done, _ = self.test_env.step(action)
 
                 if not done:
