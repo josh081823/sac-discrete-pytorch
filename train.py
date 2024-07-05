@@ -32,21 +32,20 @@ def run(args):
     frameskip = 4                         # the frameskip value of the environment
 
     # Specify the directory to log.
+    env_id = args.env_id
+    if args.random_stage:
+        env_id = env_id.replace('SuperMarioBros', 'SuperMarioBrosRandomStages')
+
     name = args.config.split('/')[-1].rstrip('.yaml')
     if args.shared:
         name = 'shared-' + name
     time = datetime.now().strftime("%Y%m%d-%H%M")
     log_dir = os.path.join(
-        args.log_folder, args.env_id, f'{name}-seed{args.seed}-{time}')
+        args.log_folder, env_id, f'{name}-seed{args.seed}-{time}')
     
     logfile = f"{log_dir}/mario_death_logfile_{time}.txt"
     evaluation_log = f"{log_dir}/mario_evaluation_death_logfile_{time}.txt"
     returns_log = f"{log_dir}/returns_log.txt"
-
-
-    env_id = args.env_id
-    if args.random_stage:
-        env_id = env_id.replace('SuperMarioBros', 'SuperMarioBrosRandomStages')
 
     env = gym_super_mario_bros.make(env_id, apply_api_compatibility=True)  #the environment. v0 is with original background, v1 has the background removed
     env = JoypadSpace(env, SIMPLE_MOVEMENT)               #The Joypadspace sets the available actions. We use SIMPLE_MOVEMENT.
