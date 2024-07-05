@@ -57,7 +57,7 @@ def run(args):
     test_env = gym_super_mario_bros.make(args.env_id, apply_api_compatibility=True)
     test_env = JoypadSpace(test_env, SIMPLE_MOVEMENT)
     test_env = SkipFrame(test_env, skip=frameskip)
-    test_env = DeadlockEnv(test_env,=(60*2)//frameskip)
+    test_env = DeadlockEnv(test_env,threshold=(60*2)//frameskip)
     test_env = MarioDeathLoggerWrapper(test_env, logfile=evaluation_log, env_id=None, select_random_stage=True)
 
 
