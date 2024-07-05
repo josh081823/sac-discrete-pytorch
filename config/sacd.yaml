@@ -3,8 +3,9 @@ batch_size: 64
 lr: 0.0003
 memory_size: 300000
 gamma: 0.99
-multi_step: 1
+multi_step: 4
 target_entropy_ratio: 0.98
+tau: 0.005
 start_steps: 20000
 update_interval: 4
 target_update_interval: 8000

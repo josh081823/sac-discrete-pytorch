@@ -14,7 +14,7 @@ class BaseAgent(ABC):
 
     def __init__(self, env, test_env, log_dir, num_steps=100000, batch_size=64,
                  memory_size=1000000, gamma=0.99, multi_step=1,
-                 target_entropy_ratio=0.98, start_steps=20000,
+                 target_entropy_ratio=0.98, tau=0.005, start_steps=20000,
                  update_interval=4, target_update_interval=8000,
                  use_per=False, num_eval_steps=125000, max_episode_steps=27000,
                  log_interval=10, eval_interval=1000, cuda=True, seed=0):
@@ -47,6 +47,7 @@ class BaseAgent(ABC):
                 state_shape=self.env.observation_space.shape,
                 device=self.device, gamma=gamma, multi_step=multi_step)
 
+        self.tau = tau
         self.log_dir = log_dir
         self.model_dir = os.path.join(log_dir, 'model')
         self.summary_dir = os.path.join(log_dir, 'summary')
@@ -158,7 +159,7 @@ class BaseAgent(ABC):
 
             if self.steps % self.target_update_interval == 0:
                 # self.update_target()
-                self.soft_update_target()
+                self.soft_update_target(tau = self.tau)
 
             if self.steps % self.eval_interval == 0:
                 self.evaluate()
@@ -321,8 +322,8 @@ class BaseAgent(ABC):
             if num_steps > self.num_eval_steps:
                 break
         
-        # mean_return = total_return / num_episodes
-        # print(f'mean return: {mean_return:<5.1f}')
+        mean_return = total_return / num_episodes
+        print(f'mean return: {mean_return:<5.1f}')
 
         if len(episode_list) > 0:
             episode_list.sort(key=lambda x: x[0])

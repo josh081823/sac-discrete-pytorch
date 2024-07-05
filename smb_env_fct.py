@@ -81,6 +81,56 @@ class DeadlockEnv(gym.Wrapper):
         #return observation, reward, truncated, info
         return observation, reward, terminated or truncated, info
 
+#This environment wrapper is used to stop a run if mario is stuck on a pipe
+class DeadlockEnv_2(gym.Wrapper):
+    def __init__(self, env, threshold=10, force_progress=False):
+        super().__init__(env)
+        self.last_x_pos = 0
+        self.count = 0
+        self.threshold = threshold
+        self.lifes = 3
+        self.stage = 1
+        self.world = 1
+        self.force_progress = force_progress
+        print("DeadlockEnv using force_process: ", self.force_progress)
+
+    def reset(self, **kwargs):
+        self.last_x_pos = 0
+        self.count = 0
+        self._done = False
+        return self.env.reset(**kwargs)
+
+    def step(self, action):
+        # state, reward, done, info = self.env.step(action)
+        state, reward, done, truncated, info = self.env.step(action)
+
+        x_pos = info['x_pos']
+
+        if self.force_progress:
+            stuck_cond = x_pos <= self.last_x_pos
+        else:
+            stuck_cond = x_pos == self.last_x_pos
+
+        #if x_pos <= self.last_x_pos:
+        if stuck_cond:
+            self.count += 1
+        else:
+            self.count = 0
+            self.last_x_pos = x_pos
+
+        if info['life'] != self.lifes or info["stage"] != self.stage or info["world"] != self.world:
+            self.last_x_pos = x_pos
+            self.count = 0
+            self.lifes = info['life']
+            self.stage = info["stage"]
+            self.world = info["world"]
+
+        if self.count >= self.threshold:
+            reward = -10
+            done = True
+
+        return state, reward, done or truncated, info
+
 #skipframe wrapper
 class SkipFrame(gym.Wrapper):
     def __init__(self, env, skip):
