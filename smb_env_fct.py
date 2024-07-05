@@ -12,6 +12,8 @@ import numpy as np
 from gym.wrappers import GrayScaleObservation
 import gym
 import logging
+import random
+
 
 #renders given frames with mediapy and shows a video
 def renderEnv(frames):
@@ -153,6 +155,29 @@ class SkipFrame(gym.Wrapper):
         #return obs, reward_out, done, info, terminated
         return observation, reward_out, terminated, info, truncated
 
+# 随机环境
+class RandomEnvWrapper(gym.Wrapper):
+    def __init__(self, env_id, stages):
+        # 初始化包装器并创建所有环境
+        prefix, version = env_id.split('-v')
+        version = 'v' + version
+        generate_env_list = lambda base, stages: [f"{base.split('-v')[0]}-{stage}-v{base.split('-v')[1]}" for stage in stages]
+        env_id_list = generate_env_list(env_id, stages)
+
+        self.env_list = [gym_super_mario_bros.make(env_id, apply_api_compatibility=True) for env_id in env_id_list]
+        self.current_env = random.choice(self.env_list)
+        super(RandomEnvWrapper, self).__init__(self.current_env)
+
+    def reset(self):
+        # 随机选择一个新的环境并重置
+        self.current_env = random.choice(self.env_list)
+        self.env = self.current_env  # 更新包装器中的当前环境
+        return self.env.reset()
+
+    def close(self):
+        # 关闭所有环境
+        for env in self.env_list:
+            env.close()
 
 class MarioDeathLoggerWrapper(gym.Wrapper):
     def __init__(self, env, logfile="mario_deaths.log", env_id=None, select_random_stage=None):
