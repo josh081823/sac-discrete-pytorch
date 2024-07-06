@@ -1,7 +1,7 @@
-num_steps: 100000000
+num_steps: 1000000
 batch_size: 64
 lr: 0.0003
-memory_size: 300000
+memory_size: 1000000
 gamma: 0.99
 multi_step: 4
 target_entropy_ratio: 0.98
