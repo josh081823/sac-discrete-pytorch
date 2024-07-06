@@ -133,6 +133,54 @@ class DeadlockEnv_2(gym.Wrapper):
 
         return state, reward, done or truncated, info
 
+class OneLifeDeadlockEnv(gym.Wrapper):
+    def __init__(self, env, threshold=10):
+        super().__init__(env)
+        self.last_x_pos = 0
+        self.count = 0
+        self.threshold = threshold
+        self.initial_lifes = None
+        self.stage = 1
+        self.world = 1
+
+    def reset(self, **kwargs):
+        self.last_x_pos = 0
+        self.count = 0
+        self.initial_lifes = None
+        return self.env.reset(**kwargs)
+
+    def step(self, action):
+        observation, reward, terminated, info, truncated = self.env.step(action)
+        x_pos = info['x_pos']
+
+        # 记录初始生命数
+        if self.initial_lifes is None:
+            self.initial_lifes = info['life']
+
+        # 更新位置和计数逻辑
+        if x_pos <= self.last_x_pos:
+            self.count += 1
+        else:
+            self.count = 0
+            self.last_x_pos = x_pos
+
+        if info['stage'] != self.stage or info['world'] != self.world:
+            self.last_x_pos = x_pos
+            self.count = 0
+            self.stage = info['stage']
+            self.world = info['world']
+
+        # 检查是否进入死锁状态
+        if self.count >= self.threshold:
+            reward = -15
+            terminated = True
+
+        # 检查生命数是否变化
+        if info['life'] != self.initial_lifes:
+            terminated = True
+
+        return observation, reward, terminated or truncated, info
+
 #skipframe wrapper
 class SkipFrame(gym.Wrapper):
     def __init__(self, env, skip):
