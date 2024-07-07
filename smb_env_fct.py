@@ -227,6 +227,41 @@ class RandomEnvWrapper(gym.Wrapper):
         for env in self.env_list:
             env.close()
 
+# 增加分数变化奖励 放在死锁后
+class RewardPlusEnv(gym.Wrapper):
+    def __init__(self, env):
+        super().__init__(env)
+        self.last_score = 0
+        self.last_stage = None
+
+    def reset(self, **kwargs):
+        self.last_score = 0
+        self.last_stage = None
+        return self.env.reset(**kwargs)
+
+    def step(self, action):
+        observation, reward, done, info = self.env.step(action)
+
+        current_score = info.get('score', 0)
+        current_stage = info.get('stage', None)
+
+        # Check for score change
+        score_change = current_score - self.last_score
+
+        # Check for stage change
+        stage_change = current_stage != self.last_stage if self.last_stage is not None else False
+
+        if score_change != 0 and not stage_change:
+            reward_plus = reward + score_change / 50.0
+        else:
+            reward_plus = reward
+
+        # Update last_score and last_stage
+        self.last_score = current_score
+        self.last_stage = current_stage
+
+        return observation, reward_plus, done, info
+
 class MarioDeathLoggerWrapper(gym.Wrapper):
     def __init__(self, env, logfile="mario_deaths.log", env_id=None, select_random_stage=None):
         super().__init__(env)

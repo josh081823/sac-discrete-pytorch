@@ -22,7 +22,7 @@ from tqdm import tqdm
 import numpy as np
 from datetime import datetime
 from gym.wrappers import GrayScaleObservation
-from smb_env_fct import renderEnv, plotRewardandTime, DeadlockEnv, SkipFrame, Downsample, GrayScale, move_state_channels, MarioDeathLoggerWrapper, RandomEnvWrapper, OneLifeDeadlockEnv
+from smb_env_fct import renderEnv, plotRewardandTime, DeadlockEnv, SkipFrame, Downsample, GrayScale, move_state_channels, MarioDeathLoggerWrapper, RandomEnvWrapper, OneLifeDeadlockEnv, RewardPlusEnv
 
 
 def run(args):
@@ -48,8 +48,9 @@ def run(args):
     returns_log = f"{log_dir}/returns_log.txt"
 
     if args.random_stage:
-        stages = ['1-1', '1-2']
-        env = RandomEnvWrapper(args.env_id, stages)
+        # stages = ['1-1', '1-2']
+        # env = RandomEnvWrapper(args.env_id, stages)
+        env = gym_super_mario_bros.make(env_id, apply_api_compatibility=True)
     else:
         env = gym_super_mario_bros.make(env_id, apply_api_compatibility=True)  #the environment. v0 is with original background, v1 has the background removed
 
@@ -57,12 +58,14 @@ def run(args):
     env = SkipFrame(env, skip=frameskip)                  #Skipframewrapper to skip some frames
     # env = DeadlockEnv(env,threshold=(60*2)//frameskip)                   #Deadlock environment wrapper to stop the game if mario is stuck at a pipe
     env = DeadlockEnv(env,threshold=(60*2)//frameskip)
+    # env = RewardPlusEnv(env)
     env = MarioDeathLoggerWrapper(env, logfile=logfile, env_id=None, select_random_stage=True)
 
     test_env = gym_super_mario_bros.make(args.env_id, apply_api_compatibility=True)
     test_env = JoypadSpace(test_env, SIMPLE_MOVEMENT)
     test_env = SkipFrame(test_env, skip=frameskip)
     test_env = DeadlockEnv(test_env,threshold=(60*2)//frameskip)
+    # env = RewardPlusEnv(env)
     test_env = MarioDeathLoggerWrapper(test_env, logfile=evaluation_log, env_id=None, select_random_stage=True)
 
 

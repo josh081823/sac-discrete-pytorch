@@ -327,6 +327,7 @@ class BaseAgent(ABC):
 
         if len(episode_list) > 0:
             episode_list.sort(key=lambda x: x[0])
+            print(f'max return: {episode_list[-1][0]:<5.1f}')
             renderEnv(episode_list[-1][1])
         else:
             print("no available video")
